@@ -1,1 +1,1 @@
-# job-sdk-scala
+# connector-sdk-scala
