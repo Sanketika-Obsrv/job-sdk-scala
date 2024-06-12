@@ -13,14 +13,14 @@ object FlinkUtil {
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
     env.getConfig.setUseSnapshotCompression(if (config.hasPath("job.enable.distributed.checkpointing")) config.getBoolean("job.enable.distributed.checkpointing") else false)
     env.enableCheckpointing(config.getInt("task.checkpointing.interval"))
-    if (config.hasPath("job.enable.distributed.checkpointing")) {
+    if (config.hasPath("job.enable.distributed.checkpointing") && config.getBoolean("job.enable.distributed.checkpointing")) {
       val checkpointingBaseUrl: Option[String] = if (config.hasPath("job.statebackend.base.url")) Option(config.getString("job.statebackend.base.url")) else None
       env.setStateBackend(new HashMapStateBackend())
       val checkpointConfig: CheckpointConfig = env.getCheckpointConfig
       checkpointConfig.setExternalizedCheckpointCleanup(ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION)
       checkpointConfig.setMinPauseBetweenCheckpoints(config.getInt("task.checkpointing.pause.between.seconds"))
       checkpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE)
-      checkpointConfig.setCheckpointStorage(s"${checkpointingBaseUrl.getOrElse("")}/${config.getString("connector.metadata.id")}")
+      checkpointConfig.setCheckpointStorage(s"${checkpointingBaseUrl.getOrElse("")}/${config.getString("metadata.id")}")
     }
     env.setRestartStrategy(RestartStrategies.fixedDelayRestart(config.getInt("task.restart-strategy.attempts"), config.getLong("task.restart-strategy.delay")))
     env
