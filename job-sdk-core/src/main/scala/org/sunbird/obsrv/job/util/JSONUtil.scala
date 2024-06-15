@@ -73,4 +73,14 @@ object JSONUtil {
     }
   }
 
+  def isJson(event: String): Boolean = {
+    try {
+      mapper.readTree(event)
+      true
+    }
+    catch {
+      case _: Exception => false
+    }
+  }
+
 }
