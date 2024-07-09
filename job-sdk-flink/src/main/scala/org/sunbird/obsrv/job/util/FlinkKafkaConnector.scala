@@ -12,7 +12,7 @@ class FlinkKafkaConnector(config: Config) {
 
   def kafkaSink[T](kafkaTopic: String): KafkaSink[T] = {
     KafkaSink.builder[T]()
-      .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+      .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
       .setRecordSerializer(new SerializationSchema(kafkaTopic))
       .setKafkaProducerConfig(kafkaProducerProperties)
       .build()
