@@ -10,8 +10,7 @@ import org.sunbird.obsrv.job.model.StatusCode.StatusCode
 object Models {
 
   case class ContextData(@JsonProperty("connector_id") connectorId: String, @JsonProperty("dataset_id") datasetId: String,
-                         @JsonProperty("connector_instance_id") connectorInstanceId: String, @JsonProperty("connector_type") connectorType: String,
-                         @JsonProperty("data_format") dataFormat: String)
+                         @JsonProperty("connector_instance_id") connectorInstanceId: String, @JsonProperty("connector_type") connectorType: String)
 
   case class ErrorLog(pdata_id: String, @JsonScalaEnumeration(classOf[StatusCodeType]) pdata_status: StatusCode, error_type: String, error_code: String, error_message: String, error_count: Option[Int] = None)
 
