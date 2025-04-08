@@ -1,6 +1,5 @@
 package org.sunbird.obsrv.job.util
 
-import com.typesafe.config.Config
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.connector.base.DeliveryGuarantee
@@ -8,21 +7,23 @@ import org.apache.flink.connector.kafka.sink.{KafkaRecordSerializationSchema, Ka
 import org.apache.flink.connector.kafka.source.KafkaSource
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer
-import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, OffsetResetStrategy}
+import org.apache.kafka.clients.consumer.{ConsumerRecord, OffsetResetStrategy}
 import org.apache.flink.util.Collector
-import org.apache.kafka.clients.producer.{ProducerConfig, ProducerRecord}
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 
 import java.nio.charset.StandardCharsets
 import java.util.Properties
+import scala.collection.mutable
+import scala.collection.JavaConverters._
 
-class FlinkKafkaConnector(config: Config) {
+class FlinkKafkaConnector(config: BaseJobConfig[_]) {
 
   def kafkaSink[T](kafkaTopic: String): KafkaSink[T] = {
     KafkaSink.builder[T]()
       .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
       .setRecordSerializer(new SerializationSchema(kafkaTopic))
-      .setKafkaProducerConfig(kafkaProducerProperties)
+      .setKafkaProducerConfig(config.kafkaProducerProperties)
       .build()
   }
 
@@ -30,28 +31,22 @@ class FlinkKafkaConnector(config: Config) {
     KafkaSource.builder[String]()
       .setTopics(kafkaTopic)
       .setDeserializer(new StringDeserializationSchema)
-      .setProperties(kafkaConsumerProperties(connectorInstanceId))
+      .setProperties(config.kafkaConsumerProperties())
       .setStartingOffsets(OffsetsInitializer.committedOffsets(OffsetResetStrategy.EARLIEST))
       .build()
   }
 
-  private def kafkaProducerProperties: Properties = {
-    val properties = new Properties()
-    properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.getString("kafka.producer.broker-servers"))
-    properties.put(ProducerConfig.LINGER_MS_CONFIG, Integer.valueOf(config.getInt("kafka.producer.linger.ms")))
-    properties.put(ProducerConfig.BATCH_SIZE_CONFIG, Integer.valueOf(config.getInt("kafka.producer.batch.size")))
-    properties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, if (config.hasPath("kafka.producer.compression")) config.getString("kafka.producer.compression") else "snappy")
-    properties.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, Integer.valueOf(config.getInt("kafka.producer.max-request-size")))
-    properties
+  def kafkaMapSource(kafkaTopic: String): KafkaSource[mutable.Map[String, AnyRef]] = {
+    kafkaMapSource(List(kafkaTopic), config.kafkaConsumerProperties())
   }
 
-  private def kafkaConsumerProperties(connectorInstanceId: String): Properties = {
-    val properties = new Properties()
-    properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.getString("kafka.producer.broker-servers"))
-    properties.setProperty("group.id", connectorInstanceId)
-    properties.setProperty(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed")
-    properties.setProperty("auto.offset.reset", if (config.hasPath("connector_auto_offset_reset")) config.getString("connector_auto_offset_reset") else "earliest")
-    properties
+  def kafkaMapSource(kafkaTopics: List[String], consumerProperties: Properties): KafkaSource[mutable.Map[String, AnyRef]] = {
+    KafkaSource.builder[mutable.Map[String, AnyRef]]()
+      .setTopics(kafkaTopics.asJava)
+      .setDeserializer(new MapDeserializationSchema)
+      .setProperties(consumerProperties)
+      .setStartingOffsets(OffsetsInitializer.committedOffsets(OffsetResetStrategy.EARLIEST))
+      .build()
   }
 
 }
