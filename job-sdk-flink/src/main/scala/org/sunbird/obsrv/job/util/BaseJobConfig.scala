@@ -1,12 +1,13 @@
 package org.sunbird.obsrv.job.util
 
 import com.typesafe.config.Config
+import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.streaming.api.scala.OutputTag
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
-
+import scala.collection.mutable
 import java.io.Serializable
 import java.util.Properties
 
@@ -30,6 +31,7 @@ abstract class BaseJobConfig[T](val config: Config, val jobName: String) extends
   val delayBetweenAttempts: Long = config.getLong("task.restart-strategy.delay")
   val kafkaConsumerParallelism: Int = config.getInt("task.consumer.parallelism")
   val downstreamOperatorsParallelism: Int = config.getInt("task.downstream.operators.parallelism")
+  private val waterMarkTimeBound: Int = config.getInt("task.waterMark.timeBound")
   // Only for Tests
   private val kafkaAutoOffsetReset: Option[String] = if (config.hasPath("kafka.auto.offset.reset")) Option(config.getString("kafka.auto.offset.reset")) else None
 
@@ -89,4 +91,18 @@ abstract class BaseJobConfig[T](val config: Config, val jobName: String) extends
   val CONST_OBSRV_META = "obsrv_meta"
   val CONST_DATASET = "dataset"
   val CONST_EVENT = "event"
+
+  // extract ets for watermark timestamping
+  private val timestampAssigner = new SerializableTimestampAssigner[mutable.Map[String, AnyRef]] {
+    override def extractTimestamp(event: mutable.Map[String, AnyRef], recordTimestamp: Long): Long = {
+      event.getOrElse("ets", recordTimestamp).asInstanceOf[Long]
+    }
+  }
+  // create watermark with event.ets timestamp
+  val watermarkStrategy: WatermarkStrategy[mutable.Map[String, AnyRef]] =
+    WatermarkStrategy
+      .forBoundedOutOfOrderness(java.time.Duration.ofSeconds(waterMarkTimeBound))
+      .withTimestampAssigner(timestampAssigner)
+  // assign watermark to stream
+
 }

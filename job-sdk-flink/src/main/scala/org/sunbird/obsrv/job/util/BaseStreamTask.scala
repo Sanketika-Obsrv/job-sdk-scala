@@ -1,7 +1,5 @@
 package org.sunbird.obsrv.job.util
 
-
-import org.apache.flink.api.common.eventtime.WatermarkStrategy
 import org.apache.flink.streaming.api.datastream.{DataStream, DataStreamSink, KeyedStream, SideOutputDataStream, SingleOutputStreamOperator}
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
 
@@ -23,7 +21,7 @@ abstract class BaseKeyedStreamTask[T, K] extends BaseStreamTaskSink[T] {
   def processStream(keyedStream: KeyedStream[T, K]): SideOutputDataStream[mutable.Map[String, AnyRef]]
 
   def getMapDataStream(env: StreamExecutionEnvironment, config: BaseJobConfig[T], kafkaConnector: FlinkKafkaConnector): DataStream[mutable.Map[String, AnyRef]] = {
-    env.fromSource(kafkaConnector.kafkaMapSource(config.inputTopic()), WatermarkStrategy.noWatermarks[mutable.Map[String, AnyRef]](), config.inputConsumer())
+    env.fromSource(kafkaConnector.kafkaMapSource(config.inputTopic()), config.watermarkStrategy, config.inputConsumer())
       .uid(config.inputConsumer()).setParallelism(config.kafkaConsumerParallelism)
       .rebalance()
   }
