@@ -31,7 +31,7 @@ abstract class BaseJobConfig[T](val config: Config, val jobName: String) extends
   val delayBetweenAttempts: Long = config.getLong("task.restart-strategy.delay")
   val kafkaConsumerParallelism: Int = config.getInt("task.consumer.parallelism")
   val downstreamOperatorsParallelism: Int = config.getInt("task.downstream.operators.parallelism")
-  private val waterMarkTimeBound: Int = config.getInt("task.waterMark.timeBound")
+  val waterMarkTimeBound: Int = config.getInt("task.waterMark.timeBound")
   // Only for Tests
   private val kafkaAutoOffsetReset: Option[String] = if (config.hasPath("kafka.auto.offset.reset")) Option(config.getString("kafka.auto.offset.reset")) else None
 
