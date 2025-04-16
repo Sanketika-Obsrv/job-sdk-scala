@@ -50,6 +50,7 @@ abstract class BaseJobConfig[T](val config: Config, val jobName: String) extends
   val enableCompressedCheckpointing: Boolean = if (config.hasPath("job.enable.distributed.checkpointing")) config.getBoolean("job.enable.distributed.checkpointing") else false
   val checkpointingInterval: Int = config.getInt("task.checkpointing.interval")
   val checkpointingPauseSeconds: Int = config.getInt("task.checkpointing.pause.between.seconds")
+  val checkpointingStateBackendType: String = if (config.hasPath("job.statebackend.type")) config.getString("job.statebackend.type") else "hashmap"
   val enableDistributedCheckpointing: Option[Boolean] = if (config.hasPath("job.enable.distributed.checkpointing")) Option(config.getBoolean("job.enable.distributed.checkpointing")) else None
   val checkpointingBaseUrl: Option[String] = if (config.hasPath("job.statebackend.base.url")) Option(config.getString("job.statebackend.base.url")) else None
 
@@ -95,7 +96,12 @@ abstract class BaseJobConfig[T](val config: Config, val jobName: String) extends
   // extract ets for watermark timestamping
   private val timestampAssigner = new SerializableTimestampAssigner[mutable.Map[String, AnyRef]] {
     override def extractTimestamp(event: mutable.Map[String, AnyRef], recordTimestamp: Long): Long = {
-      event.getOrElse("ets", recordTimestamp).asInstanceOf[Long]
+      val ets: Long = event.get("ets") match {
+        case Some(value: java.lang.Double) => value.toLong
+        case Some(value: java.lang.Long) => value
+        case _ => recordTimestamp
+      }
+      ets
     }
   }
   // create watermark with event.ets timestamp
