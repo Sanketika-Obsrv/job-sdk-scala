@@ -1,6 +1,6 @@
 package org.sunbird.obsrv.job.function
 
-import org.sunbird.obsrv.job.util.{BaseFunction, JobMetrics, Metrics}
+import org.sunbird.obsrv.job.util.Metrics
 import org.apache.flink.api.scala.metrics.ScalaGauge
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction
@@ -10,7 +10,7 @@ import scala.collection.mutable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-abstract class BaseKeyedProcessFunction[K, I, O] extends KeyedProcessFunction[K, I, O] with SystemEventHandler with JobMetrics with BaseFunction {
+abstract class BaseKeyedProcessFunction[K, I, O] extends KeyedProcessFunction[K, I, O] with SystemEventHandler {
 
   protected val metrics: Metrics = Metrics(mutable.Map[String, ConcurrentHashMap[String, AtomicLong]]())
 

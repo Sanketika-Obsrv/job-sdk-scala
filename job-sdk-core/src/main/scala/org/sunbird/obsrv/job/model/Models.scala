@@ -25,28 +25,17 @@ object Models {
 class EventIDType extends TypeReference[EventID.type]
 object EventID extends Enumeration {
   type EventID = Value
-  val LOG, METRIC, AUDIT, SEARCH = Value
+  val LOG, METRIC = Value
 }
 
 class StatusCodeType extends TypeReference[StatusCode.type]
 object StatusCode extends Enumeration {
   type StatusCode = Value
-  val success, partial, skipped, failed = Value
+  val success, failed = Value
 }
 
 class PDataTypeType extends TypeReference[PDataType.type]
 object PDataType extends Enumeration {
   type PDataType = Value
   val flink, spark = Value
-}
-
-class ProducerType extends TypeReference[Producer.type]
-object Producer extends Enumeration {
-  type Producer = Value
-  val summarizer = Value
-}
-
-object Stats extends Enumeration {
-  type Stats = Value
-  val total_processing_time, latency_time, processing_time = Value
 }
