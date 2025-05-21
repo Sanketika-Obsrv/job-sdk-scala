@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory
 
 import java.nio.charset.StandardCharsets
 import java.util.Properties
-import scala.collection.mutable
-import scala.collection.JavaConverters._
 
 class FlinkKafkaConnector(config: Config) {
 
