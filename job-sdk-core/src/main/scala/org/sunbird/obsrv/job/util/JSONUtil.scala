@@ -75,8 +75,25 @@ object JSONUtil {
 
   def isJson(event: String): Boolean = {
     try {
-      mapper.readTree(event)
-      true
+      val node = mapper.readTree(event)
+      node.getNodeType match {
+        case JsonNodeType.OBJECT => true
+        case JsonNodeType.ARRAY => true
+        case _ => false
+      }
+    }
+    catch {
+      case _: Exception => false
+    }
+  }
+
+  def isJsonObject(event: String): Boolean = {
+    try {
+      val node = mapper.readTree(event)
+      node.getNodeType match {
+        case JsonNodeType.OBJECT => true
+        case _ => false
+      }
     }
     catch {
       case _: Exception => false
