@@ -12,7 +12,7 @@ object FlinkUtil {
 
   def getExecutionContext(args: Array[String], config: Config): StreamExecutionEnvironment = {
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
-    val connectorId = Option(ParameterTool.fromArgs(args).get("metadata.id")).getOrElse(config.getString("metadata.id"))
+    val connectorId = Option(ParameterTool.fromArgs(args).get("metadata.id")).orElse(Option(ParameterTool.fromArgs(args).get("connector.instance.id")))
     env.getConfig.setUseSnapshotCompression(if (config.hasPath("job.enable.distributed.checkpointing")) config.getBoolean("job.enable.distributed.checkpointing") else false)
     env.enableCheckpointing(config.getInt("task.checkpointing.interval"))
     if (config.hasPath("job.enable.distributed.checkpointing") && config.getBoolean("job.enable.distributed.checkpointing")) {
