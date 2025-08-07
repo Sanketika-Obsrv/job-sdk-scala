@@ -3,12 +3,12 @@ package org.sunbird.obsrv.job.util
 import com.typesafe.config.Config
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
-import org.apache.flink.connector.base.DeliveryGuarantee
 import org.apache.flink.connector.kafka.sink.{KafkaRecordSerializationSchema, KafkaSink}
 import org.apache.flink.connector.kafka.source.KafkaSource
-import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer
+import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema
 import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, OffsetResetStrategy}
+import org.apache.flink.connector.base.DeliveryGuarantee
 import org.apache.flink.util.Collector
 import org.apache.kafka.clients.producer.{ProducerConfig, ProducerRecord}
 import org.slf4j.LoggerFactory
@@ -16,9 +16,10 @@ import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import java.util.Properties
 
-class FlinkKafkaConnector(config: Config) {
+class FlinkKafkaConnector(config: Config) extends Serializable {
 
   def kafkaSink[T](kafkaTopic: String): KafkaSink[T] = {
+
     KafkaSink.builder[T]()
       .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
       .setRecordSerializer(new SerializationSchema(kafkaTopic))
